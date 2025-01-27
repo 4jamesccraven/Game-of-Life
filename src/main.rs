@@ -1,14 +1,14 @@
 mod automata;
 
-use automata::{Cell, LifeGrid};
+use automata::Cell;
 
 use std::time::Duration;
 
-use pancurses::{self, initscr, endwin, Input, init_pair, COLOR_BLACK, COLOR_PAIR, COLOR_WHITE};
+use pancurses::{self, initscr, endwin, Input};
 
 const MAX_COLS: usize = 300;
 const MAX_ROWS: usize = 300;
-const FPS_DELAY: Duration = Duration::from_secs(1 / 10);
+const FPS_DELAY: Duration = Duration::from_millis(200);
 
 fn main() {
     let window = initscr();
@@ -22,15 +22,15 @@ fn main() {
     pancurses::start_color();
     pancurses::use_default_colors();
 
-    init_pair(1, COLOR_BLACK, COLOR_WHITE);
-
     let mut life = [[Cell::default(); MAX_COLS]; MAX_ROWS];
     let mut simulating = false;
 
     loop {
         match window.getch() {
             Some(Input::Character('q')) => break,
-            Some(Input::KeyEnter) | Some(Input::Character('\n')) | Some(Input::Character(' ')) => simulating = !simulating,
+            Some(Input::KeyEnter) | Some(Input::Character('\n')) | Some(Input::Character(' ')) => { 
+                simulating = !simulating ;
+            },
             Some(Input::KeyMouse) => {
                 if let Ok(mouse_event) = pancurses::getmouse() {
                     life[mouse_event.y as usize][mouse_event.x as usize].resurrect();
@@ -43,8 +43,6 @@ fn main() {
             life = automata::next_generation(life);
         }
 
-        window.clear();
-
         let (lim_i, lim_j) = window.get_max_yx();
 
         for (i, row) in life.iter().enumerate() {
@@ -52,7 +50,13 @@ fn main() {
                 if cell.is_alive() {
                     let (i, j) = (i as i32, j as i32);
                     if i <= lim_i && j <= lim_j {
-                        window.mvaddch(i, j, ' ' as pancurses::chtype | COLOR_PAIR(1));
+                        window.mvaddch(i, j, '#');
+                    }
+                }
+                else {
+                    let (i, j) = (i as i32, j as i32);
+                    if i <= lim_i && j <= lim_j {
+                        window.mvaddch(i, j, ' ');
                     }
                 }
             }

@@ -4,17 +4,6 @@ use std::default::Default;
 
 pub type LifeGrid = [[Cell; MAX_COLS]; MAX_ROWS];
 
-const DIRS: [(isize, isize); 8] = [
-    (-1, -1),
-    (-1,  0),
-    (-1,  1),
-    ( 0, -1),
-    ( 0,  1),
-    ( 1, -1),
-    ( 1,  0),
-    ( 1,  1),
-];
-
 #[derive(Clone, Copy, Debug)]
 pub struct Cell {
     alive: bool,
@@ -54,20 +43,29 @@ impl Cell {
 }
 
 fn bounds_check(x: isize, y: isize) -> bool {
-    (0 <= x && x < MAX_ROWS as isize) && (0 <= y && y < MAX_COLS as isize)
+    (0 <= x && x < MAX_COLS as isize) && (0 <= y && y < MAX_ROWS as isize)
 }
 
 pub fn next_generation(life: LifeGrid) -> LifeGrid {
     let mut next_gen = [[Cell::default(); MAX_COLS]; MAX_ROWS];
     for i in 0..MAX_ROWS {
         for j in 0..MAX_COLS {
-            let live = DIRS
-                .iter()
-                .filter(|&(dy, dx)| {
-                    let (x, y) = (i as isize + dy, j as isize + dx);
-                    bounds_check(x, y) && life[y as usize][x as usize].is_alive()
-                })
-                .count();
+            let mut live: i8 = 0;
+
+            for x in -1isize..=1 {
+                for y in -1isize..=1 {
+                    let new_x = x + (j as isize);
+                    let new_y = y + (i as isize);
+
+                    if bounds_check(new_x, new_y) {
+                        live += life[new_y as usize][new_x as usize].is_alive() as i8;
+                    }
+                }
+            }
+
+            if life[i][j].is_alive() {
+                live -= 1;
+            }
 
             if life[i][j].is_alive() && (live < 2 || live > 3) {
                 next_gen[i][j] = Cell::new(false);
