@@ -1,13 +1,15 @@
 mod automata;
+mod rendering;
 
 use automata::Cell;
+use rendering::{render_ui, render_grid};
 
 use std::time::Duration;
 
 use pancurses::{self, initscr, endwin, Input};
 
-const MAX_COLS: usize = 300;
-const MAX_ROWS: usize = 300;
+const MAX_COLS: usize = 100;
+const MAX_ROWS: usize = 26;
 const FPS_DELAY: Duration = Duration::from_millis(200);
 
 fn main() {
@@ -22,6 +24,9 @@ fn main() {
     pancurses::start_color();
     pancurses::use_default_colors();
 
+    // 1 -> UI Elements
+    pancurses::init_pair(1, pancurses::COLOR_RED, -1);
+
     let mut life = [[Cell::default(); MAX_COLS]; MAX_ROWS];
     let mut simulating = false;
 
@@ -29,11 +34,15 @@ fn main() {
         match window.getch() {
             Some(Input::Character('q')) => break,
             Some(Input::KeyEnter) | Some(Input::Character('\n')) | Some(Input::Character(' ')) => { 
-                simulating = !simulating ;
+                simulating = !simulating;
             },
             Some(Input::KeyMouse) => {
                 if let Ok(mouse_event) = pancurses::getmouse() {
-                    life[mouse_event.y as usize][mouse_event.x as usize].resurrect();
+                    let (x, y) = ((mouse_event.x - 1) as usize, (mouse_event.y - 1) as usize);
+
+                    if x <= MAX_COLS && y <= MAX_ROWS {
+                        life[y][x].toggle();
+                    }
                 }
             },
             _ => {},
@@ -43,24 +52,8 @@ fn main() {
             life = automata::next_generation(life);
         }
 
-        let (lim_i, lim_j) = window.get_max_yx();
-
-        for (i, row) in life.iter().enumerate() {
-            for (j, cell) in row.iter().enumerate() {
-                if cell.is_alive() {
-                    let (i, j) = (i as i32, j as i32);
-                    if i <= lim_i && j <= lim_j {
-                        window.mvaddch(i, j, '#');
-                    }
-                }
-                else {
-                    let (i, j) = (i as i32, j as i32);
-                    if i <= lim_i && j <= lim_j {
-                        window.mvaddch(i, j, ' ');
-                    }
-                }
-            }
-        }
+        render_ui(&window);
+        render_grid(&window, &life);
 
         window.refresh();
 
