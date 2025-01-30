@@ -1,10 +1,9 @@
 use crate::automata::Cell;
-use crate::rendering::{render_ui, render_grid};
 
 use std::default::Default;
 use std::time::Duration;
 
-use pancurses::{self, initscr, endwin, Input, Window, ALL_MOUSE_EVENTS};
+use pancurses::{self, initscr, endwin, COLOR_PAIR, Input, Window, ALL_MOUSE_EVENTS};
 
 
 pub type LifeGrid = Vec<Vec<Cell>>;
@@ -150,9 +149,81 @@ impl App {
     //## Rendering ##//
 
     fn render(&self) {
-        render_ui(&self.window, &self.grid);
-        render_grid(&self.window, &self.grid);
+        self.render_ui();
+        self.render_grid();
         self.window.refresh();
+    }
+
+    pub fn render_ui(&self) {
+        let rows = self.grid.len() as i32;
+        let cols = self.grid
+            .first()
+            .expect("render_ui: empty row")
+            .len() as i32;
+
+        self.window.attron(pancurses::ColorPair(1));
+
+        self.window.mvaddstr(0, 0, "╔");
+        self.window.mvaddstr(0, 1, "═".repeat(cols as usize));
+        self.window.mvaddstr(0, cols + 1, "╗");
+
+        for i in 1..=(rows + 1) {
+            self.window.mvaddstr(i, 0, "║");
+            self.window.mvaddstr(i, cols + 1, "║");
+        }
+
+        self.window.mvaddstr(rows + 1, 0, "╚");
+        self.window.mvaddstr(rows + 1, 1, "═".repeat(cols as usize));
+        self.window.mvaddstr(rows + 1, cols + 1, "╝");
+
+        self.window.attroff(pancurses::ColorPair(1));
+
+        let mut spacing = 1;
+        let ui_line = rows + 2;
+
+        let pause_str = if self.simulating {
+            "(SPACE) ⏸ Pause"
+        }
+        else {
+            "(SPACE) ⏵ Play "
+        };
+
+        let clr_str = "(C) Clear";
+
+        let quit_str = "(Q) Quit";
+
+
+        self.window.mvaddstr(ui_line, spacing, pause_str);
+        spacing += pause_str.len() as i32 + 1;
+
+        self.window.mvaddstr(ui_line, spacing, clr_str);
+        spacing += clr_str.len() as i32 + 1;
+
+        self.window.mvaddstr(ui_line, spacing, quit_str);
+    }
+
+    fn render_grid(&self) {
+        let (lim_i, lim_j) = self.window.get_max_yx();
+
+        for (i, row) in self.grid.iter().enumerate() {
+            for (j, cell) in row.iter().enumerate() {
+                let (i, j) = (i + 1, j + 1);
+                if cell.is_alive() {
+                    let (i, j) = (i as i32, j as i32);
+                    if i <= lim_i && j <= lim_j {
+                        self.window.mvaddstr(i, j, "■");
+                    }
+                }
+                else {
+                    let (i, j) = (i as i32, j as i32);
+                    if i <= lim_i && j <= lim_j {
+                        self.window.attron(COLOR_PAIR(2));
+                        self.window.mvaddstr(i, j, "+");
+                        self.window.attroff(COLOR_PAIR(2));
+                    }
+                }
+            }
+        }
     }
 
 

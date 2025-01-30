@@ -1,6 +1,5 @@
 mod app;
 mod automata;
-mod rendering;
 
 use app::App;
 
