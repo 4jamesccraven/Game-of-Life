@@ -1,24 +1,29 @@
-use crate::automata::LifeGrid;
-use crate::{MAX_ROWS, MAX_COLS};
+use crate::app::LifeGrid;
 
 use pancurses::{self, COLOR_PAIR, Window};
 
 
-pub fn render_ui(window: &Window) {
+pub fn render_ui(window: &Window, life: &LifeGrid) {
+    let rows = life.len();
+    let cols = life
+        .first()
+        .expect("render_ui: empty row")
+        .len();
+
     window.attron(pancurses::ColorPair(1));
 
     window.mvaddstr(0, 0, "╔");
-    window.mvaddstr(0, 1, "═".repeat(MAX_COLS));
-    window.mvaddstr(0, (MAX_COLS + 1) as i32, "╗");
+    window.mvaddstr(0, 1, "═".repeat(cols));
+    window.mvaddstr(0, (cols + 1) as i32, "╗");
 
-    for i in 1..=(MAX_ROWS as i32 + 1) {
+    for i in 1..=(rows as i32 + 1) {
         window.mvaddstr(i, 0, "║");
-        window.mvaddstr(i, (MAX_COLS as i32) + 1, "║");
+        window.mvaddstr(i, (cols as i32) + 1, "║");
     }
 
-    window.mvaddstr((MAX_ROWS + 1) as i32, 0, "╚");
-    window.mvaddstr((MAX_ROWS + 1) as i32, 1, "═".repeat(MAX_COLS));
-    window.mvaddstr((MAX_ROWS + 1) as i32, (MAX_COLS + 1) as i32, "╝");
+    window.mvaddstr((rows + 1) as i32, 0, "╚");
+    window.mvaddstr((rows + 1) as i32, 1, "═".repeat(cols as usize));
+    window.mvaddstr((rows + 1) as i32, (cols + 1) as i32, "╝");
 
     window.attroff(pancurses::ColorPair(1));
 }
