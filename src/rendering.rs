@@ -1,7 +1,7 @@
 use crate::automata::LifeGrid;
 use crate::{MAX_ROWS, MAX_COLS};
 
-use pancurses::{self, Window};
+use pancurses::{self, COLOR_PAIR, Window};
 
 
 pub fn render_ui(window: &Window) {
@@ -33,13 +33,15 @@ pub fn render_grid(window: &Window, life: &LifeGrid) {
             if cell.is_alive() {
                 let (i, j) = (i as i32, j as i32);
                 if i <= lim_i && j <= lim_j {
-                    window.mvaddch(i, j, '#');
+                    window.mvaddstr(i, j, "■");
                 }
             }
             else {
                 let (i, j) = (i as i32, j as i32);
                 if i <= lim_i && j <= lim_j {
-                    window.mvaddch(i, j, ' ');
+                    window.attron(COLOR_PAIR(2));
+                    window.mvaddstr(i, j, "+");
+                    window.attroff(COLOR_PAIR(2));
                 }
             }
         }
