@@ -96,6 +96,7 @@ impl App {
                     }
                 }
             },
+            Some(Input::KeyResize) => self.fit_term(),
             _ => {},
         }
         None
@@ -178,7 +179,6 @@ impl App {
 
         self.window.attroff(pancurses::ColorPair(1));
 
-        let mut spacing = 1;
         let ui_line = rows + 2;
 
         let pause_str = if self.simulating {
@@ -187,19 +187,13 @@ impl App {
         else {
             "(SPACE) ⏵ Play "
         };
-
         let clr_str = "(C) Clear";
-
         let quit_str = "(Q) Quit";
 
+        let ui = format!(" {pause_str}  {clr_str}  {quit_str}");
 
-        self.window.mvaddstr(ui_line, spacing, pause_str);
-        spacing += pause_str.len() as i32 + 1;
+        self.window.mvaddstr(ui_line, 0, ui);
 
-        self.window.mvaddstr(ui_line, spacing, clr_str);
-        spacing += clr_str.len() as i32 + 1;
-
-        self.window.mvaddstr(ui_line, spacing, quit_str);
     }
 
     fn render_grid(&self) {
@@ -254,5 +248,7 @@ impl App {
         };
 
         assert!(rectangular);
+
+        self.window.clear();
     }
 }
